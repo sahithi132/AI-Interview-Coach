@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Interview Coach - Live Preview</title>
+  <!-- Google Fonts & FontAwesome Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --bg: #0d0e15;
+      --card-bg: #161824;
+      --card-border: #25293d;
+      --primary: #8f3ffc;
+      --secondary: #0f62fe;
+      --accent: #da127d;
+      --cyan: #00f0ff;
+      --text-primary: #ffffff;
+      --text-secondary: #8a94a6;
+      --text-muted: #4c5566;
+      --success: #24a148;
+      --warning: #f1c21b;
+      --danger: #da1e28;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      background-color: #08090d;
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(143, 63, 252, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(15, 98, 254, 0.15) 0%, transparent 40%);
+    }
+
+    /* Phone Device Simulator Wrapper */
+    .phone-container {
+      width: 390px;
+      height: 844px;
+      background-color: var(--bg);
+      border-radius: 48px;
+      border: 12px solid #222533;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Notch */
+    .phone-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 150px;
+      height: 30px;
+      background-color: #222533;
+      border-bottom-left-radius: 18px;
+      border-bottom-right-radius: 18px;
+      z-index: 100;
+    }
+
+    /* Screen Views */
+    .screen {
+      flex: 1;
+      padding: 24px;
+      padding-top: 40px; /* offset for notch */
+      display: none;
+      flex-direction: column;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* Utility Styles */
+    .btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 18px;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s ease;
+      color: #fff;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      box-shadow: 0 8px 20px rgba(143, 63, 252, 0.3);
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background-color: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-secondary);
+    }
+
+    .btn-secondary:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+    }
+
+    /* SCREEN 1: COACH SELECTION */
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .subtitle {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: var(--secondary);
+      text-transform: uppercase;
+    }
+
+    .title {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 32px;
+      margin-top: 4px;
+    }
+
+    .title span {
+      color: var(--cyan);
+    }
+
+    .icon-btn {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      color: var(--primary);
+    }
+
+    /* Category scroll */
+    .categories {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      margin-bottom: 20px;
+      padding-bottom: 5px;
+    }
+
+    .categories::-webkit-scrollbar {
+      display: none;
+    }
+
+    .category-chip {
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      background-color: transparent;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+    }
+
+    .category-chip.active {
+      background-color: rgba(255, 255, 255, 0.08);
+      border-color: var(--card-border);
+      color: var(--text-primary);
+    }
+
+    /* Coach Card */
+    .coach-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .coach-glow {
+      position: absolute;
+      top: -30px;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      filter: blur(40px);
+      opacity: 0.15;
+      background: var(--primary);
+    }
+
+    .sphere-container {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 2px dashed var(--primary);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 15px 0;
+      position: relative;
+    }
+
+    .sphere-inner {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: rgba(255, 255, 255, 0.02);
+      box-shadow: 0 0 15px rgba(143, 63, 252, 0.2);
+    }
+
+    .diff-badge {
+      position: absolute;
+      top: 5px;
+      right: -10px;
+      font-size: 8px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 8px;
+      background-color: rgba(218, 30, 40, 0.2);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      letter-spacing: 1px;
+    }
+
+    .coach-name {
+      font-size: 22px;
+      font-weight: 800;
+      margin-top: 10px;
+    }
+
+    .coach-title {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-align: center;
+      margin: 4px 0 16px 0;
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      background-color: rgba(255,255,255,0.03);
+      padding: 12px;
+      border-radius: 16px;
+      margin-bottom: 16px;
+    }
+
+    .stat-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .stat-label {
+      font-size: 8px;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      margin-bottom: 2px;
+    }
+
+    .stat-value {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .stat-value i {
+      color: var(--warning);
+      font-size: 10px;
+    }
+
+    .tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .tag {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 4px 10px;
+      font-size: 10px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    /* Slider controls */
+    .slider-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 60%;
+      margin: 0 auto 20px auto;
+    }
+
+    .slider-arrow {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+
+    .dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--text-muted);
+    }
+
+    .dot.active {
+      width: 14px;
+      border-radius: 3px;
+      background-color: var(--text-primary);
+    }
+
+    /* SCREEN 2: PROFILE SETUP */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .form-input {
+      width: 100%;
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 14px 16px;
+      border-radius: 16px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+    }
+
+    .roles-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .role-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .role-card.active {
+      border-color: var(--primary);
+      background-color: rgba(143, 63, 252, 0.05);
+    }
+
+    .role-card i {
+      font-size: 20px;
+      color: var(--text-secondary);
+    }
+
+    .role-card.active i {
+      color: var(--primary);
+    }
+
+    .role-card span {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .role-card.active span {
+      color: var(--text-primary);
+    }
+
+    .exp-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .exp-chip {
+      flex: 1;
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 12px;
+      border-radius: 16px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+
+    .exp-chip.active {
+      border-color: var(--secondary);
+      background-color: rgba(15, 98, 254, 0.05);
+      color: var(--text-primary);
+    }
+
+    /* SCREEN 3: INTERVIEW SCREEN */
+    .timer-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .timer-badge i {
+      color: var(--cyan);
+    }
+
+    .progress-bar-bg {
+      height: 4px;
+      background-color: var(--card-border);
+      border-radius: 2px;
+      width: 100%;
+      margin: 15px 0 20px 0;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background-color: var(--primary);
+      border-radius: 2px;
+      width: 20%;
+    }
+
+    .q-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .q-card-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .easy-badge {
+      background-color: rgba(36, 161, 72, 0.15);
+      border: 1px solid var(--success);
+      color: var(--success);
+      font-size: 8px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    .coach-tag {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .q-text {
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 26px;
+      margin-bottom: 14px;
+    }
+
+    .tip-box {
+      background-color: rgba(255,255,255,0.02);
+      border-left: 3px solid var(--cyan);
+      padding: 8px 12px;
+      border-radius: 0 10px 10px 0;
+    }
+
+    .tip-text {
+      color: var(--cyan);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .answer-textarea {
+      width: 100%;
+      height: 120px;
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      resize: none;
+      margin-bottom: 15px;
+    }
+
+    .answer-textarea.recording {
+      border-color: var(--accent);
+      box-shadow: 0 0 10px rgba(218, 18, 125, 0.1);
+    }
+
+    /* Waveform Animation */
+    .waveform {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      height: 50px;
+      margin-bottom: 15px;
+    }
+
+    .waveform-bar {
+      width: 3px;
+      height: 10px;
+      background-color: rgba(143, 63, 252, 0.4);
+      border-radius: 2px;
+      transition: height 0.1s ease;
+    }
+
+    .waveform.active .waveform-bar {
+      background-color: var(--accent);
+      animation: wave 1.2s ease-in-out infinite alternate;
+    }
+
+    .waveform.active .waveform-bar:nth-child(1) { animation-delay: 0.1s; }
+    .waveform.active .waveform-bar:nth-child(2) { animation-delay: 0.3s; }
+    .waveform.active .waveform-bar:nth-child(3) { animation-delay: 0.5s; }
+    .waveform.active .waveform-bar:nth-child(4) { animation-delay: 0.2s; }
+    .waveform.active .waveform-bar:nth-child(5) { animation-delay: 0.4s; }
+    .waveform.active .waveform-bar:nth-child(6) { animation-delay: 0.1s; }
+    .waveform.active .waveform-bar:nth-child(7) { animation-delay: 0.6s; }
+    .waveform.active .waveform-bar:nth-child(8) { animation-delay: 0.3s; }
+
+    @keyframes wave {
+      0% { height: 10px; }
+      100% { height: 38px; }
+    }
+
+    /* Audio controls */
+    .audio-controls {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .circle-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      color: #fff;
+    }
+
+    .circle-btn-mic {
+      width: 64px;
+      height: 64px;
+      background-color: var(--primary);
+      box-shadow: 0 6px 18px rgba(143, 63, 252, 0.4);
+    }
+
+    .circle-btn-mic.recording {
+      background-color: var(--accent);
+      box-shadow: 0 6px 18px rgba(218, 18, 125, 0.4);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    /* SCREEN 4: FEEDBACK SCREEN */
+    .score-banner {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .radial-score {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 5px solid var(--primary);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 12px;
+      box-shadow: 0 0 20px rgba(143, 63, 252, 0.3);
+    }
+
+    .radial-score-num {
+      font-size: 32px;
+      font-weight: 900;
+    }
+
+    .radial-score-label {
+      font-size: 10px;
+      color: var(--text-secondary);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .score-statement {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-align: center;
+      line-height: 18px;
+      margin-bottom: 12px;
+    }
+
+    /* Metric card widget */
+    .metric-widget {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .widget-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .widget-title {
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .widget-title i {
+      color: var(--cyan);
+    }
+
+    .widget-score {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .widget-progress-bg {
+      height: 6px;
+      background-color: var(--card-border);
+      border-radius: 3px;
+      width: 100%;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .widget-progress-fill {
+      height: 100%;
+      background-color: var(--cyan);
+      border-radius: 3px;
+    }
+
+    .widget-graph-container {
+      height: 40px;
+      background-color: rgba(143, 63, 252, 0.05);
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 15px;
+      margin-bottom: 10px;
+    }
+
+    .widget-graph-bar {
+      width: 3px;
+      border-radius: 1.5px;
+      background-color: var(--primary);
+      opacity: 0.4;
+    }
+
+    .widget-graph-bar.highlight {
+      opacity: 1;
+    }
+
+    .widget-label {
+      font-size: 9px;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .widget-text {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 16px;
+      margin-bottom: 8px;
+    }
+
+    /* SCREEN 5: DASHBOARD SCREEN */
+    .dash-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .dash-stat-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .dash-stat-value {
+      font-size: 24px;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+
+    .dash-stat-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .dash-stat-sub {
+      font-size: 9px;
+      color: var(--text-muted);
+    }
+
+    .dash-insight-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .dash-insight-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .dash-insight-icon.up {
+      background-color: rgba(36, 161, 72, 0.15);
+      color: var(--success);
+    }
+
+    .dash-insight-icon.down {
+      background-color: rgba(218, 30, 40, 0.15);
+      color: var(--danger);
+    }
+
+    .dash-insight-texts {
+      flex: 1;
+    }
+
+    .dash-insight-title {
+      font-size: 9px;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .dash-insight-value {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .dash-insight-sub {
+      font-size: 10px;
+      color: var(--text-secondary);
+    }
+
+    .dash-chart-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .chart-header {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 15px;
+    }
+
+    .chart-bars-container {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-end;
+      height: 120px;
+      padding: 0 10px;
+    }
+
+    .chart-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 18%;
+    }
+
+    .chart-bar-bg {
+      height: 90px;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .chart-bar-fill {
+      width: 100%;
+      background-color: var(--primary);
+      border-radius: 6px;
+      display: flex;
+      justify-content: center;
+      padding-top: 4px;
+      box-shadow: 0 4px 10px rgba(143, 63, 252, 0.2);
+    }
+
+    .chart-bar-score {
+      font-size: 8px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .chart-bar-day {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="phone-container">
+    <div class="phone-notch"></div>
+
+    <!-- SCREEN 1: COACH SELECTION -->
+    <div id="screen-coach" class="screen active">
+      <div class="header-row">
+        <div>
+          <div class="subtitle">AI Interview Prep</div>
+          <div class="title">Choose<br>Your <span>AI Coach</span></div>
+        </div>
+        <div class="icon-btn" onclick="navigateTo('screen-dashboard')">
+          <i class="fa-solid fa-chart-simple"></i>
+        </div>
+      </div>
+
+      <div class="categories">
+        <div class="category-chip active" onclick="filterCategory('All')">All Types</div>
+        <div class="category-chip" onclick="filterCategory('Behavioral')">Behavioral</div>
+        <div class="category-chip" onclick="filterCategory('Technical')">Technical</div>
+        <div class="category-chip" onclick="filterCategory('Case')">Case</div>
+      </div>
+
+      <div id="coach-slider-container">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <div class="slider-nav">
+        <div class="slider-arrow" onclick="prevCoach()"><i class="fa-solid fa-arrow-left"></i></div>
+        <div class="dots" id="slider-dots">
+          <!-- Injected via JavaScript -->
+        </div>
+        <div class="slider-arrow" onclick="nextCoach()"><i class="fa-solid fa-arrow-right"></i></div>
+      </div>
+
+      <button class="btn btn-primary" onclick="proceedToSetup()">
+        Start Session with <span id="selected-coach-btn-text">Ava</span> <i class="fa-solid fa-arrow-right"></i>
+      </button>
+      
+      <div style="font-size: 10px; color: var(--text-muted); text-align: center; margin-top: 15px;">
+        Trusted by Stanford, MIT & 700+ universities
+      </div>
+    </div>
+
+    <!-- SCREEN 2: PROFILE SETUP -->
+    <div id="screen-setup" class="screen">
+      <div class="header-row" style="align-items: center; margin-bottom: 20px;">
+        <div class="icon-btn" style="color: #fff;" onclick="navigateTo('screen-coach')">
+          <i class="fa-solid fa-chevron-left"></i>
+        </div>
+        <div style="font-size: 16px; font-weight: 700;">Profile Setup</div>
+        <div style="width: 40px;"></div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px; background-color: rgba(0, 240, 255, 0.05); border: 1px solid rgba(0, 240, 255, 0.2); padding: 12px; border-radius: 14px; margin-bottom: 20px;">
+        <i class="fa-solid fa-ribbon" style="color: var(--cyan);"></i>
+        <div style="font-size: 13px; color: var(--text-secondary);">
+          Session Coach: <span id="setup-coach-name" style="color: var(--cyan); font-weight: 700;">Ava</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Your Name</label>
+        <input type="text" id="candidate-name" class="form-input" placeholder="Enter your name">
+        <div id="name-error" style="color: var(--danger); font-size: 11px; margin-top: 4px; display: none;">Please enter your name.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Choose Role</label>
+        <div class="roles-grid">
+          <div class="role-card active" onclick="selectRole('AI Engineer', this)">
+            <i class="fa-solid fa-brain"></i>
+            <span>AI Engineer</span>
+          </div>
+          <div class="role-card" onclick="selectRole('Fullstack Developer', this)">
+            <i class="fa-solid fa-code"></i>
+            <span>Fullstack Dev</span>
+          </div>
+          <div class="role-card" onclick="selectRole('Product Manager', this)">
+            <i class="fa-solid fa-briefcase"></i>
+            <span>Product Manager</span>
+          </div>
+          <div class="role-card" onclick="selectRole('Data Scientist', this)">
+            <i class="fa-solid fa-chart-line"></i>
+            <span>Data Scientist</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Experience Level</label>
+        <div class="exp-row">
+          <div class="exp-chip active" onclick="selectExp('Entry-Level', this)">Entry</div>
+          <div class="exp-chip" onclick="selectExp('Mid-Level', this)">Mid</div>
+          <div class="exp-chip" onclick="selectExp('Senior-Level', this)">Senior</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="startInterview()">
+        Start Mock Interview <i class="fa-solid fa-play"></i>
+      </button>
+    </div>
+
+    <!-- SCREEN 3: INTERVIEW SCREEN -->
+    <div id="screen-interview" class="screen">
+      <div class="header-row" style="align-items: center; margin-bottom: 10px;">
+        <div class="icon-btn" style="color: #fff;" onclick="exitInterview()">
+          <i class="fa-solid fa-close"></i>
+        </div>
+        <div id="q-counter" style="font-size: 13px; font-weight: 700; color: var(--text-secondary);">Question 1 of 5</div>
+        <div class="timer-badge">
+          <i class="fa-solid fa-clock"></i>
+          <span id="interview-timer">03:00</span>
+        </div>
+      </div>
+
+      <div class="progress-bar-bg">
+        <div id="q-progress-fill" class="progress-bar-fill"></div>
+      </div>
+
+      <div class="q-card">
+        <div class="q-card-header">
+          <div class="easy-badge">MEDIUM</div>
+          <div class="coach-tag" id="interview-coach-tag">Ava</div>
+        </div>
+        <div class="q-text" id="question-display-text">Explain the difference between AI and Machine Learning.</div>
+        <div class="tip-box">
+          <div class="tip-text" id="coach-tip-display">AI TIP: USE THE STAR METHOD</div>
+        </div>
+      </div>
+
+      <div class="form-group" style="flex: 1; display: flex; flex-direction: column;">
+        <label class="form-label">Your Answer</label>
+        <textarea id="answer-box" class="answer-textarea" placeholder="Type your answer here or tap the microphone to speak..."></textarea>
+      </div>
+
+      <div class="waveform" id="mic-waveform">
+        <div class="waveform-bar"></div>
+        <div class="waveform-bar"></div>
+        <div class="waveform-bar"></div>
+        <div class="waveform-bar"></div>
+        <div class="waveform-bar"></div>
+        <div class="waveform-bar"></div>
+        <div class="waveform-bar"></div>
+        <div class="waveform-bar"></div>
+      </div>
+
+      <div class="audio-controls">
+        <div class="circle-btn" id="pause-btn" onclick="togglePause()"><i class="fa-solid fa-pause"></i></div>
+        <div class="circle-btn circle-btn-mic" id="mic-btn" onclick="toggleRecording()"><i class="fa-solid fa-microphone"></i></div>
+        <div class="circle-btn" onclick="submitAndNext()"><i class="fa-solid fa-arrow-right"></i></div>
+      </div>
+      
+      <div id="recording-indicator-text" style="font-size: 10px; color: var(--accent); text-align: center; margin-top: 10px; font-weight: 700; visibility: hidden;">
+        Simulating speaking speech recognition...
+      </div>
+    </div>
+
+    <!-- SCREEN 4: FEEDBACK SCREEN -->
+    <div id="screen-feedback" class="screen">
+      <div class="header-row" style="align-items: center; margin-bottom: 20px;">
+        <div class="icon-btn" style="color: #fff;" onclick="navigateTo('screen-coach')">
+          <i class="fa-solid fa-close"></i>
+        </div>
+        <div style="font-size: 16px; font-weight: 700;">Performance Insights</div>
+        <div style="width: 40px;"></div>
+      </div>
+
+      <div class="score-banner">
+        <div class="radial-score">
+          <span class="radial-score-num" id="feedback-overall-score">72%</span>
+          <span class="radial-score-label">Readiness</span>
+        </div>
+        <div class="score-statement" id="feedback-coach-statement">
+          Your speech showed great composure.
+        </div>
+        <div class="btn btn-secondary" style="padding: 8px 16px; width: auto; border-radius: 12px; font-size: 12px;">
+          <i class="fa-solid fa-share-nodes"></i> Share Score
+        </div>
+      </div>
+
+      <div class="form-label">Skill Breakdown</div>
+
+      <div class="metric-widget">
+        <div class="widget-header">
+          <div class="widget-title"><i class="fa-solid fa-circle-check" style="color: var(--success);"></i> Technical Accuracy</div>
+          <div class="widget-score" id="score-tech">8/10</div>
+        </div>
+        <div class="widget-label">Summary</div>
+        <div class="widget-text" id="feedback-tech">Your technical accuracy was sound. Excellent details provided on complexity concepts.</div>
+        <div class="widget-label">Improvement Tip</div>
+        <div class="widget-text" id="tip-tech">Try explaining parallel GPU memory access next time.</div>
+      </div>
+
+      <div class="metric-widget">
+        <div class="widget-header">
+          <div class="widget-title"><i class="fa-solid fa-microphone"></i> Communication Clarity</div>
+          <div class="widget-score">8/10</div>
+        </div>
+        <div class="widget-progress-bg">
+          <div class="widget-progress-fill" style="width: 80%;"></div>
+        </div>
+        <div class="widget-label">Summary</div>
+        <div class="widget-text">Speech pacing was smooth and articulation was very clear throughout.</div>
+      </div>
+
+      <div class="metric-widget">
+        <div class="widget-header">
+          <div class="widget-title"><i class="fa-solid fa-wave-square" style="color: var(--primary);"></i> Confidence & Tone</div>
+          <div class="widget-score" id="score-conf">6/10</div>
+        </div>
+        <div class="widget-graph-container">
+          <div class="widget-graph-bar" style="height: 18px;"></div>
+          <div class="widget-graph-bar" style="height: 25px;"></div>
+          <div class="widget-graph-bar" style="height: 15px;"></div>
+          <div class="widget-graph-bar highlight" style="height: 35px;"></div>
+          <div class="widget-graph-bar" style="height: 8px;"></div>
+          <div class="widget-graph-bar" style="height: 22px;"></div>
+          <div class="widget-graph-bar" style="height: 30px;"></div>
+        </div>
+        <div class="widget-label">Improvement Tip</div>
+        <div class="widget-text" id="tip-conf">Try to minimize pauses and limit the use of filler words like "um".</div>
+      </div>
+
+      <button class="btn btn-primary" onclick="retryInterview()">
+        <i class="fa-solid fa-rotate-right"></i> Retry Session
+      </button>
+
+      <button class="btn btn-secondary" style="margin-top: 8px; margin-bottom: 20px;" onclick="navigateTo('screen-coach')">
+        Return to Home
+      </button>
+    </div>
+
+    <!-- SCREEN 5: DASHBOARD SCREEN -->
+    <div id="screen-dashboard" class="screen">
+      <div class="header-row" style="align-items: center; margin-bottom: 24px;">
+        <div class="icon-btn" style="color: #fff;" onclick="navigateTo('screen-coach')">
+          <i class="fa-solid fa-chevron-left"></i>
+        </div>
+        <div style="font-size: 16px; font-weight: 700;">Performance Dashboard</div>
+        <div style="width: 40px;"></div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="dash-stat-card">
+          <div class="dash-stat-value" id="dash-total">12</div>
+          <div class="dash-stat-label">Interviews</div>
+          <div class="dash-stat-sub">Completed sessions</div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-value" id="dash-avg">82%</div>
+          <div class="dash-stat-label">Average Score</div>
+          <div class="dash-stat-sub">Overall readiness</div>
+        </div>
+      </div>
+
+      <div class="dash-insight-card">
+        <div class="dash-insight-icon up">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <div class="dash-insight-texts">
+          <div class="dash-insight-title">Best Area</div>
+          <div class="dash-insight-value" id="dash-best">Communication Clarity</div>
+          <div class="dash-insight-sub">Strongest skill across interviews</div>
+        </div>
+      </div>
+
+      <div class="dash-insight-card">
+        <div class="dash-insight-icon down">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div class="dash-insight-texts">
+          <div class="dash-insight-title">Focus Area</div>
+          <div class="dash-insight-value" id="dash-weak">STAR Method</div>
+          <div class="dash-insight-sub">Needs targeted practice sessions</div>
+        </div>
+      </div>
+
+      <div class="dash-chart-card">
+        <div class="chart-header">Weekly Progress</div>
+        <div class="chart-bars-container" id="dash-chart-bars">
+          <!-- Injected via JavaScript -->
+        </div>
+      </div>
+      
+      <button class="btn btn-secondary" style="margin-bottom: 20px;" onclick="navigateTo('screen-coach')">
+        Back to Home
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    // Config
+    const API_BASE = "http://localhost:8000";
+
+    // Static Coach Data
+    const COACHES = [
+      {
+        name: "Ava",
+        title: "Senior AI Coach - Behavioral Specialist",
+        difficulty: "HARD",
+        exp: "8Y",
+        sessions: "1.2k",
+        rating: "4.9",
+        tags: ["Behavioral", "Leadership", "Situational"],
+        category: "Behavioral"
+      },
+      {
+        name: "Marcus",
+        title: "Technical Lead - Coding & Tech Specialist",
+        difficulty: "EXPERT",
+        exp: "10Y",
+        sessions: "2.5k",
+        rating: "4.8",
+        tags: ["Algorithms", "Machine Learning", "System Design"],
+        category: "Technical"
+      },
+      {
+        name: "Sophia",
+        title: "Executive Director - Management & Case Specialist",
+        difficulty: "MEDIUM",
+        exp: "6Y",
+        sessions: "900",
+        rating: "4.9",
+        tags: ["Product Strategy", "Market Sizing", "Analytics"],
+        category: "Case"
+      }
+    ];
+
+    // App State
+    let activeCategory = "All";
+    let coachList = [...COACHES];
+    let coachIdx = 0;
+    let selectedCoach = COACHES[0];
+    let selectedRole = "AI Engineer";
+    let selectedExp = "Mid-Level";
+    let session = null;
+    let questions = [];
+    let currentQIdx = 0;
+    
+    // Timer state
+    let timeLeft = 180;
+    let timerInterval = null;
+    let isPaused = false;
+    
+    // Recording simulation state
+    let isRecording = false;
+    let dictationInterval = null;
+
+    // Initialize Page
+    document.addEventListener("DOMContentLoaded", () => {
+      renderCoachSlider();
+      updateSelectedCoachBtn();
+      loadDashboardData();
+    });
+
+    function navigateTo(screenId) {
+      document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+      document.getElementById(screenId).classList.add("active");
+      
+      // Stop anything running
+      stopTimer();
+      stopDictation();
+      
+      if (screenId === "screen-dashboard") {
+        loadDashboardData();
+      }
+    }
+
+    // Slider logic
+    function renderCoachSlider() {
+      const container = document.getElementById("coach-slider-container");
+      const dotsContainer = document.getElementById("slider-dots");
+      
+      container.innerHTML = "";
+      dotsContainer.innerHTML = "";
+      
+      if (coachList.length === 0) {
+        container.innerHTML = "<div style='text-align: center; color: var(--text-secondary); padding: 40px 0;'>No coaches in this category</div>";
+        return;
+      }
+      
+      if (coachIdx >= coachList.length) coachIdx = 0;
+      const coach = coachList[coachIdx];
+      selectedCoach = coach;
+      
+      // Card color
+      let cardColor = "var(--primary)";
+      if (coach.name === "Marcus") cardColor = "var(--secondary)";
+      if (coach.name === "Sophia") cardColor = "var(--accent)";
+
+      container.innerHTML = `
+        <div class="coach-card" style="border-color: ${cardColor}">
+          <div class="coach-glow" style="background: ${cardColor}"></div>
+          <div class="sphere-container" style="border-color: ${cardColor}">
+            <div class="sphere-inner" style="border-color: ${cardColor}; box-shadow: 0 0 15px ${cardColor}40;">
+              <i class="fa-solid fa-robot" style="color: ${cardColor}; font-size: 28px;"></i>
+            </div>
+            <div class="diff-badge">${coach.difficulty}</div>
+          </div>
+          <div class="coach-name">${coach.name}</div>
+          <div class="coach-title">${coach.title}</div>
+          <div class="stats-row">
+            <div class="stat-box">
+              <div class="stat-label">EXP</div>
+              <div class="stat-value">${coach.exp}</div>
+            </div>
+            <div style="width: 1px; height: 20px; background-color: var(--card-border);"></div>
+            <div class="stat-box">
+              <div class="stat-label">SESSIONS</div>
+              <div class="stat-value">${coach.sessions}</div>
+            </div>
+            <div style="width: 1px; height: 20px; background-color: var(--card-border);"></div>
+            <div class="stat-box">
+              <div class="stat-label">RATING</div>
+              <div class="stat-value"><i class="fa-solid fa-star"></i> ${coach.rating}</div>
+            </div>
+          </div>
+          <div class="tags">
+            ${coach.tags.map(t => `<span class="tag">${t}</span>`).join("")}
+          </div>
+        </div>
+      `;
+      
+      // Render dots
+      coachList.forEach((_, idx) => {
+        const dot = document.createElement("div");
+        dot.className = `dot ${idx === coachIdx ? 'active' : ''}`;
+        dotsContainer.appendChild(dot);
+      });
+
+      updateSelectedCoachBtn();
+    }
+
+    function updateSelectedCoachBtn() {
+      const btnText = document.getElementById("selected-coach-btn-text");
+      if (btnText && selectedCoach) {
+        btnText.innerText = selectedCoach.name;
+      }
+    }
+
+    function prevCoach() {
+      if (coachList.length === 0) return;
+      coachIdx = coachIdx > 0 ? coachIdx - 1 : coachList.length - 1;
+      renderCoachSlider();
+    }
+
+    function nextCoach() {
+      if (coachList.length === 0) return;
+      coachIdx = coachIdx < coachList.length - 1 ? coachIdx + 1 : 0;
+      renderCoachSlider();
+    }
+
+    function filterCategory(cat) {
+      document.querySelectorAll(".category-chip").forEach(chip => {
+        chip.classList.toggle("active", chip.innerText.includes(cat));
+      });
+      activeCategory = cat;
+      coachList = cat === "All" ? [...COACHES] : COACHES.filter(c => c.category === cat);
+      coachIdx = 0;
+      renderCoachSlider();
+    }
+
+    // Screen Transitions
+    function proceedToSetup() {
+      document.getElementById("setup-coach-name").innerText = selectedCoach.name;
+      navigateTo("screen-setup");
+    }
+
+    function selectRole(role, element) {
+      document.querySelectorAll(".role-card").forEach(c => c.classList.remove("active"));
+      element.classList.add("active");
+      selectedRole = role;
+    }
+
+    function selectExp(exp, element) {
+      document.querySelectorAll(".exp-chip").forEach(c => c.classList.remove("active"));
+      element.classList.add("active");
+      selectedExp = exp;
+    }
+
+    // Network Request Wrapper
+    async function apiRequest(endpoint, options = {}) {
+      try {
+        const res = await fetch(`${API_BASE}${endpoint}`, {
+          headers: { "Content-Type": "application/json" },
+          ...options
+        });
+        if (!res.ok) throw new Error("HTTP error");
+        return await res.json();
+      } catch (err) {
+        console.warn("Backend down. Simulating locally.", err);
+        return mockResponses(endpoint, options.body ? JSON.parse(options.body) : null);
+      }
+    }
+
+    // Mock response fallback database
+    function mockResponses(endpoint, body) {
+      if (endpoint === "/api/users") {
+        return { id: 777, name: body.name, target_role: body.target_role, experience_level: body.experience_level };
+      }
+      if (endpoint === "/api/sessions/start") {
+        const mockQs = {
+          "Ava": [
+            "Tell me about a time you led a team through a difficult challenge.",
+            "Describe a situation where you had a conflict with a colleague and how you resolved it.",
+            "How do you prioritize your tasks when managing multiple tight deadlines?",
+            "Can you share an instance where you failed to meet a goal and what you learned from it?",
+            "Tell me about a time when you had to persuade others to adopt your perspective."
+          ],
+          "Marcus": [
+            "Explain the difference between supervised, unsupervised, and reinforcement learning.",
+            "What is the difference between a process and a thread, and how does asynchronous programming solve concurrency?",
+            "Explain how the Transformer architecture works, specifically the attention mechanism.",
+            "How would you design a database schema for a high-traffic e-commerce ordering system?",
+            "What is time and space complexity, and how do you optimize an algorithm from O(N^2) to O(N log N)?"
+          ],
+          "Sophia": [
+            "Our client wants to launch a food delivery app in a saturated market. How would you evaluate the opportunity?",
+            "How would you design a scalable system to track global real-time Uber driver locations?",
+            "If your product's user engagement dropped by 15% week-over-week, how would you investigate the root cause?",
+            "How would you launch a new subscription-based API service for developer workflows?",
+            "Estimate the number of smart devices active in New York City."
+          ]
+        };
+        const questions = mockQs[body.coach_name] || mockQs["Ava"];
+        return {
+          session_id: "mock-session-html",
+          questions: questions.map((q, i) => ({ question_number: i + 1, question_text: q }))
+        };
+      }
+      if (endpoint === "/api/sessions/submit") {
+        return {
+          score: 8,
+          feedback_text: "You structured your response well. Next time, add quantitative figures.",
+          grammar_feedback: "Fluent delivery. No filler words detected.",
+          confidence_score: 8,
+          star_feedback: "Followed the context logic perfectly."
+        };
+      }
+      if (endpoint.endsWith("/feedback")) {
+        return {
+          overall_score: 84,
+          coach_name: selectedCoach.name,
+          transcripts: [
+            { score: 8, feedback_text: "Good technical details.", grammar_feedback: "Watch out for filler words.", confidence_score: 8, star_feedback: "Structured well." }
+          ]
+        };
+      }
+      if (endpoint === "/api/dashboard") {
+        return {
+          total_interviews: 12,
+          completed_interviews: 12,
+          average_score: 82,
+          strongest_skill: "Communication Clarity",
+          needs_improvement: "STAR Method",
+          weekly_progress: [
+            { day: "Mon", score: 70 },
+            { day: "Tue", score: 75 },
+            { day: "Wed", score: 82 },
+            { day: "Thu", score: 88 }
+          ]
+        };
+      }
+    }
+
+    // Active Interview flow
+    async function startInterview() {
+      const nameInput = document.getElementById("candidate-name");
+      const errorDiv = document.getElementById("name-error");
+      
+      if (!nameInput.value.trim()) {
+        errorDiv.style.display = "block";
+        return;
+      }
+      errorDiv.style.display = "none";
+      
+      // Load user
+      const user = await apiRequest("/api/users", {
+        method: "POST",
+        body: JSON.stringify({ name: nameInput.value.trim(), target_role: selectedRole, experience_level: selectedExp })
+      });
+      
+      // Start Session
+      const sesData = await apiRequest("/api/sessions/start", {
+        method: "POST",
+        body: JSON.stringify({ user_id: user.id, coach_name: selectedCoach.name, role: selectedRole })
+      });
+      
+      session = { sessionId: sesData.session_id, coachName: selectedCoach.name, role: selectedRole };
+      questions = sesData.questions;
+      currentQIdx = 0;
+      
+      loadQuestion();
+      navigateTo("screen-interview");
+    }
+
+    function loadQuestion() {
+      const q = questions[currentQIdx];
+      document.getElementById("q-counter").innerText = `Question ${q.question_number} of ${questions.length}`;
+      document.getElementById("question-display-text").innerText = q.question_text;
+      document.getElementById("q-progress-fill").style.width = `${((currentQIdx + 1) / questions.length) * 100}%`;
+      document.getElementById("interview-coach-tag").innerText = selectedCoach.name;
+      
+      // Tips matching coach
+      const tipText = document.getElementById("coach-tip-display");
+      if (selectedCoach.name === "Ava") tipText.innerText = "AI TIP: USE THE STAR METHOD (SITUATION, TASK, ACTION, RESULT)";
+      else if (selectedCoach.name === "Marcus") tipText.innerText = "AI TIP: EXPLAIN MEMORY & TIME COMPLEXITIES (O(N))";
+      else tipText.innerText = "AI TIP: START WITH A HIGH-LEVEL HYPOTHESIS TREE";
+      
+      document.getElementById("answer-box").value = "";
+      timeLeft = 180;
+      startTimer();
+    }
+
+    // Timer controls
+    function startTimer() {
+      stopTimer();
+      isPaused = false;
+      document.getElementById("pause-btn").innerHTML = '<i class="fa-solid fa-pause"></i>';
+      
+      timerInterval = setInterval(() => {
+        if (isPaused) return;
+        timeLeft--;
+        
+        let mins = Math.floor(timeLeft / 60).toString().padStart(2, "0");
+        let secs = (timeLeft % 60).toString().padStart(2, "0");
+        document.getElementById("interview-timer").innerText = `${mins}:${secs}`;
+        
+        if (timeLeft <= 0) {
+          submitAndNext();
+        }
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+    }
+
+    function togglePause() {
+      isPaused = !isPaused;
+      document.getElementById("pause-btn").innerHTML = isPaused ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-pause"></i>';
+    }
+
+    // Voice Dictation Simulation
+    function toggleRecording() {
+      const micBtn = document.getElementById("mic-btn");
+      const waveform = document.getElementById("mic-waveform");
+      const answerBox = document.getElementById("answer-box");
+      const recordAlert = document.getElementById("recording-indicator-text");
+      
+      isRecording = !isRecording;
+      
+      if (isRecording) {
+        micBtn.classList.add("recording");
+        waveform.classList.add("active");
+        recordAlert.style.visibility = "visible";
+        answerBox.classList.add("recording");
+        
+        const phrases = [
+          "In my previous project, we had to optimize our database schema. ",
+          "I analyzed the indexes and normalized three redundant tables, ",
+          "which ultimately reduced search queries by 60% and solved our bottleneck."
+        ];
+        let idx = 0;
+        
+        dictationInterval = setInterval(() => {
+          if (idx < phrases.length) {
+            answerBox.value += phrases[idx];
+            idx++;
+          } else {
+            stopDictation();
+          }
+        }, 1500);
+      } else {
+        stopDictation();
+      }
+    }
+
+    function stopDictation() {
+      const micBtn = document.getElementById("mic-btn");
+      const waveform = document.getElementById("mic-waveform");
+      const recordAlert = document.getElementById("recording-indicator-text");
+      const answerBox = document.getElementById("answer-box");
+      
+      isRecording = false;
+      if (micBtn) micBtn.classList.remove("recording");
+      if (waveform) waveform.classList.remove("active");
+      if (recordAlert) recordAlert.style.visibility = "hidden";
+      if (answerBox) answerBox.classList.remove("recording");
+      if (dictationInterval) clearInterval(dictationInterval);
+    }
+
+    async function submitAndNext() {
+      stopDictation();
+      stopTimer();
+      
+      const answer = document.getElementById("answer-box").value;
+      const q = questions[currentQIdx];
+      
+      // Submit answer
+      await apiRequest("/api/sessions/submit", {
+        method: "POST",
+        body: JSON.stringify({
+          session_id: session.sessionId,
+          question_number: q.question_number,
+          user_answer: answer
+        })
+      });
+      
+      currentQIdx++;
+      
+      if (currentQIdx < questions.length) {
+        loadQuestion();
+      } else {
+        // Complete interview, fetch final feedback
+        const feed = await apiRequest(`/api/sessions/${session.sessionId}/feedback`);
+        showFeedback(feed);
+      }
+    }
+
+    function showFeedback(feed) {
+      document.getElementById("feedback-overall-score").innerText = `${feed.overall_score || 84}%`;
+      document.getElementById("feedback-coach-statement").innerText = `Great session with ${feed.coach_name}! You completed all ${questions.length} questions.`;
+      
+      const lastItem = feed.transcripts[feed.transcripts.length - 1] || {};
+      document.getElementById("score-tech").innerText = `${lastItem.score || 8}/10`;
+      document.getElementById("feedback-tech").innerText = lastItem.feedback_text || "Good technical clarity and examples.";
+      document.getElementById("tip-tech").innerText = lastItem.star_feedback || "Use quantitative figures in your outcome.";
+      
+      document.getElementById("score-conf").innerText = `${lastItem.confidence_score || 7}/10`;
+      document.getElementById("tip-conf").innerText = lastItem.grammar_feedback || "Reduce using placeholder words like 'um' and 'like'.";
+      
+      navigateTo("screen-feedback");
+    }
+
+    function exitInterview() {
+      if (confirm("Are you sure you want to exit the interview? Your progress will be lost.")) {
+        navigateTo("screen-coach");
+      }
+    }
+
+    function retryInterview() {
+      navigateTo("screen-setup");
+    }
+
+    // Dashboard Data loading
+    async function loadDashboardData() {
+      const dash = await apiRequest("/api/dashboard");
+      
+      document.getElementById("dash-total").innerText = dash.total_interviews;
+      document.getElementById("dash-avg").innerText = `${dash.average_score}%`;
+      document.getElementById("dash-best").innerText = dash.strongest_skill;
+      document.getElementById("dash-weak").innerText = dash.needs_improvement;
+      
+      // Render weekly chart bars
+      const chartBars = document.getElementById("dash-chart-bars");
+      chartBars.innerHTML = "";
+      
+      dash.weekly_progress.forEach(item => {
+        const col = document.createElement("div");
+        col.className = "chart-column";
+        col.innerHTML = `
+          <div class="chart-bar-bg">
+            <div class="chart-bar-fill" style="height: ${item.score}%;">
+              <span class="chart-bar-score">${item.score}%</span>
+            </div>
+          </div>
+          <div class="chart-bar-day">${item.day}</div>
+        `;
+        chartBars.appendChild(col);
+      });
+    }
+  </script>
+</body>
+</html>
